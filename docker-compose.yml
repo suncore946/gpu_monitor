@@ -1,0 +1,54 @@
+services:
+  # 1. Node Exporter: 负责暴露宿主机指标 + Textfile
+  node-exporter:
+    image: prom/node-exporter:latest
+    container_name: node_exporter_gpu
+    volumes:
+      - gpu-metrics-data:/var/lib/node_exporter/textfile_collector
+    command:
+      - '--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'
+      - '--no-collector.rapl' # 关闭一些不需要的收集器减少噪音
+    ports:
+      - "9100:9100"
+    restart: unless-stopped
+    pid: host
+
+  # 2. 数据采集 Sidecar: 运行你的 bash 脚本
+  gpu-metrics-sidecar:
+    image: nvidia/cuda:12.0.0-base-ubuntu20.04
+    container_name: gpu_metrics_sidecar
+    privileged: true  # 确保能无阻碍读取 /proc 下所有 PID 信息
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu, utility]
+    pid: host
+    volumes:
+      - gpu-metrics-data:/output
+      - ./collect_gpu_user.sh:/opt/collect_gpu_user.sh
+      - /etc/passwd:/host/etc/passwd:ro
+    entrypoint: ["/bin/bash", "/opt/collect_gpu_user.sh"]
+    restart: unless-stopped
+
+  # 3. DCGM Exporter: 官方推荐，采集显卡利用率、温度、功率等核心指标
+  dcgm-exporter:
+    image: nvcr.io/nvidia/k8s/dcgm-exporter
+    container_name: dcgm_exporter
+    restart: always
+    cap_add:
+      - SYS_ADMIN
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    ports:
+      - "9400:9400"
+
+volumes:
+  gpu-metrics-data:
