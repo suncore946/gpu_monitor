@@ -75,7 +75,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "count(count by (instance, gpu_index) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "count(DCGM_FI_DEV_GPU_TEMP{job=~\"gpu-dcgm|.*\", instance=~\"$instance.*\"})",
           "formatted": true,
           "hide": false,
           "instant": true,
@@ -151,7 +151,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "count(sum by (user) (gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > 0)) or vector(0)",
+          "expr": "count(sum by (user) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > 0)) or vector(0)",
           "instant": true,
           "refId": "A"
         }
@@ -219,7 +219,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "avg(label_replace(DCGM_FI_DEV_GPU_UTIL, \"instance\", \"$1:9100\", \"instance\", \"([^:]+).*\") and on(instance) count by (instance) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "avg(DCGM_FI_DEV_GPU_UTIL{instance=~\"$instance.*\"})",
           "instant": true,
           "refId": "A"
         }
@@ -291,7 +291,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max(label_replace(DCGM_FI_DEV_GPU_TEMP, \"instance\", \"$1:9100\", \"instance\", \"([^:]+).*\") and on(instance) count by (instance) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "max(DCGM_FI_DEV_GPU_TEMP{instance=~\"$instance.*\"})",
           "instant": true,
           "refId": "A"
         }
@@ -457,8 +457,8 @@
         "showHeader": true,
         "sortBy": [
           {
-            "desc": true,
-            "displayName": "用户"
+            "desc": false,
+            "displayName": "显卡型号"
           }
         ]
       },
@@ -470,7 +470,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\", gpu_index!=\"\"} > bool 0))[24h:5m]) / 12",
+          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\", user!=\"\", gpu_name!=\"\"} > bool 0))[24h:5m]) / 12 > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -484,7 +484,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\", gpu_index!=\"\"} > bool 0))[7d:5m]) / 12",
+          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\", user!=\"\", gpu_name!=\"\"} > bool 0))[7d:5m]) / 12 > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -498,7 +498,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\", gpu_index!=\"\"} > bool 0))[30d:5m]) / 12",
+          "expr": "sum_over_time((sum by (user, instance, gpu_index, gpu_name) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\", user!=\"\", gpu_name!=\"\"} > bool 0))[30d:5m]) / 12 > 0",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -624,7 +624,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[24h:5m])) by (user) / 12",
+          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[24h:5m])) by (user) / 12",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{user}}",
@@ -637,7 +637,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance\"}[24h]))) or vector(0)) * 24) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[24h:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
+          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance.*\"}[24h]))) or vector(0)) * 24) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[24h:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -730,7 +730,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[7d:5m])) by (user) / 12",
+          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[7d:5m])) by (user) / 12",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{user}}",
@@ -743,7 +743,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance\"}[7d]))) or vector(0)) * 168) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[7d:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
+          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance.*\"}[7d]))) or vector(0)) * 168) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[7d:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -836,7 +836,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[30d:5m])) by (user) / 12",
+          "expr": "sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[30d:5m])) by (user) / 12",
           "format": "time_series",
           "instant": true,
           "legendFormat": "{{user}}",
@@ -849,7 +849,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance\"}[30d]))) or vector(0)) * 720) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > bool 0)[30d:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
+          "expr": "label_replace(vector((scalar(count(count by (instance, gpu_index) (present_over_time(gpu_process_memory_usage_bytes{instance=~\"$instance.*\"}[30d]))) or vector(0)) * 720) - scalar(sum(sum_over_time((gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > bool 0)[30d:5m])) / 12)), \"user\", \"😴 空闲 (Idle)\", \"\", \"\")",
           "format": "time_series",
           "hide": false,
           "instant": true,
@@ -911,6 +911,10 @@
               {
                 "id": "unit",
                 "value": "bytes"
+              },
+              {
+                "id": "noValue",
+                "value": "0"
               }
             ]
           },
@@ -936,7 +940,7 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "gpu_name"
+              "options": "显卡名"
             },
             "properties": []
           },
@@ -965,6 +969,10 @@
               {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "noValue",
+                "value": "Free"
               }
             ]
           },
@@ -1062,6 +1070,10 @@
                     }
                   ]
                 }
+              },
+              {
+                "id": "noValue",
+                "value": "0"
               }
             ]
           }
@@ -1079,8 +1091,8 @@
         "showHeader": true,
         "sortBy": [
           {
-            "desc": true,
-            "displayName": "Occupancy"
+            "desc": false,
+            "displayName": "显卡设备"
           }
         ]
       },
@@ -1092,7 +1104,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "sum by (instance, gpu_index, gpu_name, user) (gpu_process_memory_usage_bytes{instance=~\"$instance\", user=~\"$user\"} > 0)",
+          "expr": "label_join(sum by (instance, gpu_index, user) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > 0), \"uid\", \"_\", \"instance\", \"gpu_index\")",
           "format": "table",
           "instant": true,
           "legendFormat": "UserMem",
@@ -1105,7 +1117,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance, gpu_index) (label_replace(DCGM_FI_DEV_GPU_UTIL, \"instance\", \"$1:9100\", \"instance\", \"([^:]+).*\") and on(instance) count by (instance) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "label_join(avg by (instance, gpu_index) (DCGM_FI_DEV_GPU_UTIL{instance=~\"$instance.*\"}), \"uid\", \"_\", \"instance\", \"gpu_index\")",
           "format": "table",
           "instant": true,
           "legendFormat": "RawUtil",
@@ -1117,7 +1129,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance, gpu_index, gpu_name) (gpu_memory_total_bytes{instance=~\"$instance\"})",
+          "expr": "label_join(max by (instance, gpu_index, gpu_name) (gpu_memory_total_bytes{instance=~\"$instance.*\"}), \"uid\", \"_\", \"instance\", \"gpu_index\")",
           "format": "table",
           "hide": false,
           "instant": true,
@@ -1131,7 +1143,7 @@
         {
           "id": "joinByField",
           "options": {
-            "byField": "gpu_index",
+            "byField": "uid",
             "mode": "outer"
           }
         },
@@ -1140,10 +1152,19 @@
           "options": {
             "alias": "MemPct",
             "binary": {
-              "left": "Value #A",
+              "left": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #A"
+                }
+              },
               "operator": "/",
-              "reducer": "sum",
-              "right": "Value #C"
+              "right": {
+                "matcher": {
+                  "id": "byName",
+                  "options": "Value #C"
+                }
+              }
             },
             "mode": "binary",
             "reduce": {
@@ -1161,23 +1182,33 @@
               "__name__": true,
               "command": true,
               "exported_instance": true,
+              "gpu_index 1": true,
+              "gpu_index 2": true,
+              "gpu_name 1": true,
               "instance 1": true,
               "instance 2": true,
-              "job": true
+              "instance 3": false,
+              "job": true,
+              "uid": true
             },
+            "includeByName": {},
             "indexByName": {
-              "MemPct": 4,
+              "MemPct": 5,
               "Value #A": 3,
               "Value #B": 6,
-              "Value #C": 5,
+              "Value #C": 7,
               "gpu_index": 2,
+              "gpu_name": 1.5,
               "instance": 0,
+              "uid": 4,
               "user": 1
             },
             "renameByName": {
               "Value #A": "🧠 已用显存",
               "Value #B": "⚙️ 核心负载",
               "Value #C": "📦 总显存",
+              "gpu_name": "🎫显卡设备",
+              "instance 3": "💻服务器IP地址",
               "user": "👤 占用者"
             }
           }
@@ -1279,7 +1310,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance, gpu_index) (label_replace(DCGM_FI_DEV_GPU_UTIL, \"instance\", \"$1:9100\", \"instance\", \"([^:]+).*\") and on(instance) count by (instance) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "max by (instance, gpu_index) (DCGM_FI_DEV_GPU_UTIL{instance=~\"$instance.*\"})",
           "legendFormat": "{{instance}} - GPU {{gpu_index}}",
           "range": true,
           "refId": "A"
@@ -1382,7 +1413,7 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "max by (instance, gpu_index) (label_replace(DCGM_FI_DEV_GPU_TEMP, \"instance\", \"$1:9100\", \"instance\", \"([^:]+).*\") and on(instance) count by (instance) (gpu_memory_total_bytes{instance=~\"$instance\"}))",
+          "expr": "max by (instance, gpu_index) (DCGM_FI_DEV_GPU_TEMP{instance=~\"$instance.*\"})",
           "legendFormat": "{{instance}} - GPU {{gpu_index}}",
           "range": true,
           "refId": "A"
@@ -1417,6 +1448,35 @@
       },
       {
         "current": {
+          "text": [
+            "172.31.220.65"
+          ],
+          "value": [
+            "172.31.220.65"
+          ]
+        },
+        "datasource": {
+          "type": "prometheus",
+          "uid": "${DS_PROMETHEUS}"
+        },
+        "definition": "label_values(DCGM_FI_DEV_GPU_TEMP,instance)",
+        "includeAll": true,
+        "label": "服务器实例",
+        "multi": true,
+        "name": "instance",
+        "options": [],
+        "query": {
+          "qryType": 1,
+          "query": "label_values(DCGM_FI_DEV_GPU_TEMP,instance)",
+          "refId": "PrometheusVariableQueryEditor-VariableQuery"
+        },
+        "refresh": 1,
+        "regex": "/([^:]+)/",
+        "sort": 1,
+        "type": "query"
+      },
+      {
+        "current": {
           "text": "All",
           "value": [
             "$__all"
@@ -1426,59 +1486,29 @@
           "type": "prometheus",
           "uid": "${DS_PROMETHEUS}"
         },
-        "definition": "label_values(gpu_process_memory_usage_bytes, user)",
+        "definition": "query_result(max by (user) (present_over_time(gpu_process_memory_usage_bytes{user!=\"\", user!=\"root\", user!=\"ollama\"}[30d])))",
+        "query": "query_result(max by (user) (present_over_time(gpu_process_memory_usage_bytes{user!=\"\", user!=\"root\", user!=\"ollama\"}[30d])))",
         "includeAll": true,
-        "label": "User",
+        "label": "用户",
         "multi": true,
         "name": "user",
         "options": [],
-        "query": {
-          "query": "label_values(gpu_process_memory_usage_bytes, user)",
-          "refId": "StandardVariableQuery"
-        },
         "refresh": 1,
         "regex": "",
         "sort": 1,
-        "type": "query"
-      },
-      {
-        "current": {
-          "text": [
-            "172.31.220.65:9100"
-          ],
-          "value": [
-            "172.31.220.65:9100"
-          ]
-        },
-        "datasource": {
-          "type": "prometheus",
-          "uid": "${DS_PROMETHEUS}"
-        },
-        "definition": "label_values(gpu_process_memory_usage_bytes, instance)",
-        "includeAll": true,
-        "label": "Server Addr",
-        "multi": true,
-        "name": "instance",
-        "options": [],
-        "query": {
-          "query": "label_values(gpu_process_memory_usage_bytes, instance)",
-          "refId": "StandardVariableQuery"
-        },
-        "refresh": 1,
-        "regex": "",
-        "sort": 1,
-        "type": "query"
+        "type": "query",
+        "hide": 0
       }
     ]
   },
   "time": {
-    "from": "now-30d",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {},
   "timezone": "Asia/Shanghai",
   "title": "用户级GPU使用情况",
   "uid": "gpu-user-stats",
-  "version": 57,
+  "version": 68,
   "weekStart": "monday"
 }
