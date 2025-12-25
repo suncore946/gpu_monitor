@@ -18,6 +18,7 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 1,
+  "id": 0,
   "links": [],
   "panels": [
     {
@@ -915,6 +916,10 @@
               {
                 "id": "noValue",
                 "value": "0"
+              },
+              {
+                "id": "custom.width",
+                "value": 108
               }
             ]
           },
@@ -927,6 +932,10 @@
               {
                 "id": "unit",
                 "value": "bytes"
+              },
+              {
+                "id": "custom.width",
+                "value": 120
               }
             ]
           },
@@ -940,23 +949,28 @@
           {
             "matcher": {
               "id": "byName",
-              "options": "显卡名"
+              "options": "🎫显卡型号"
             },
-            "properties": []
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 308
+              }
+            ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "gpu_index"
+              "options": "🔢 ID"
             },
             "properties": [
               {
-                "id": "displayName",
-                "value": "卡号"
-              },
-              {
                 "id": "custom.align",
                 "value": "center"
+              },
+              {
+                "id": "custom.width",
+                "value": 80
               }
             ]
           },
@@ -971,8 +985,8 @@
                 "value": "center"
               },
               {
-                "id": "noValue",
-                "value": "Free"
+                "id": "custom.width",
+                "value": 100
               }
             ]
           },
@@ -999,12 +1013,16 @@
                   "mode": "absolute",
                   "steps": [
                     {
-                      "color": "red",
+                      "color": "green",
                       "value": 0
                     },
                     {
-                      "color": "super-light-green",
-                      "value": 2
+                      "color": "#EAB839",
+                      "value": 50
+                    },
+                    {
+                      "color": "red",
+                      "value": 80
                     }
                   ]
                 }
@@ -1016,7 +1034,7 @@
               {
                 "id": "custom.cellOptions",
                 "value": {
-                  "mode": "basic",
+                  "mode": "gradient",
                   "type": "gauge"
                 }
               },
@@ -1027,19 +1045,19 @@
               {
                 "id": "min",
                 "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 600
               }
             ]
           },
           {
             "matcher": {
               "id": "byName",
-              "options": "MemPct"
+              "options": "📊 显存占比"
             },
             "properties": [
-              {
-                "id": "displayName",
-                "value": "占用率"
-              },
               {
                 "id": "unit",
                 "value": "percentunit"
@@ -1074,6 +1092,42 @@
               {
                 "id": "noValue",
                 "value": "0"
+              },
+              {
+                "id": "max",
+                "value": 1
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "custom.width",
+                "value": 150
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "💻服务器IP地址"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 203
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "🔢显卡卡号"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 286
               }
             ]
           }
@@ -1104,9 +1158,10 @@
             "uid": "${DS_PROMETHEUS}"
           },
           "editorMode": "code",
-          "expr": "label_join(sum by (instance, gpu_index, user) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\"} > 0), \"uid\", \"_\", \"instance\", \"gpu_index\")",
+          "expr": "label_join(sum by (instance, gpu_index, user) (gpu_process_memory_usage_bytes{instance=~\"$instance.*\", user=~\"$user\", user!=\"\"}), \"uid\", \"_\", \"instance\", \"gpu_index\")",
           "format": "table",
           "instant": true,
+          "interval": "",
           "legendFormat": "UserMem",
           "range": false,
           "refId": "A"
@@ -1173,6 +1228,33 @@
           }
         },
         {
+          "id": "filterByValue",
+          "options": {
+            "filters": [
+              {
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "\\S+"
+                  }
+                },
+                "fieldName": "user"
+              },
+              {
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                },
+                "fieldName": "Value #A"
+              }
+            ],
+            "match": "all",
+            "type": "include"
+          }
+        },
+        {
           "id": "organize",
           "options": {
             "excludeByName": {
@@ -1182,7 +1264,7 @@
               "__name__": true,
               "command": true,
               "exported_instance": true,
-              "gpu_index 1": true,
+              "gpu_index 1": false,
               "gpu_index 2": true,
               "gpu_name 1": true,
               "instance 1": true,
@@ -1193,234 +1275,39 @@
             },
             "includeByName": {},
             "indexByName": {
-              "MemPct": 5,
-              "Value #A": 3,
-              "Value #B": 6,
-              "Value #C": 7,
-              "gpu_index": 2,
-              "gpu_name": 1.5,
-              "instance": 0,
-              "uid": 4,
-              "user": 1
+              "MemPct": 7,
+              "Time 1": 9,
+              "Time 2": 11,
+              "Time 3": 13,
+              "Value #A": 5,
+              "Value #B": 8,
+              "Value #C": 4,
+              "gpu_index 1": 2,
+              "gpu_index 2": 14,
+              "gpu_name": 1,
+              "instance 1": 10,
+              "instance 2": 12,
+              "instance 3": 0,
+              "uid": 6,
+              "user": 3
             },
             "renameByName": {
+              "MemPct": "📊 显存占比",
               "Value #A": "🧠 已用显存",
               "Value #B": "⚙️ 核心负载",
               "Value #C": "📦 总显存",
-              "gpu_name": "🎫显卡设备",
+              "gpu_index": "🔢 ID",
+              "gpu_index 1": "🔢显卡卡号",
+              "gpu_name": "🎫显卡型号",
+              "instance": "💻服务器地址",
               "instance 3": "💻服务器IP地址",
+              "uid": "",
               "user": "👤 占用者"
             }
           }
         }
       ],
       "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "#EAB839",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 0,
-        "y": 31
-      },
-      "id": 60,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "max by (instance, gpu_index) (DCGM_FI_DEV_GPU_UTIL{instance=~\"$instance.*\"})",
-          "legendFormat": "{{instance}} - GPU {{gpu_index}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "⚙️ 显卡实时负载 (GPU Core Util)",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "${DS_PROMETHEUS}"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "axisBorderShow": false,
-            "axisCenteredZero": false,
-            "axisColorMode": "text",
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "barWidthFactor": 0.6,
-            "drawStyle": "line",
-            "fillOpacity": 0,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "insertNulls": false,
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "showValues": false,
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "#EAB839",
-                "value": 70
-              },
-              {
-                "color": "red",
-                "value": 85
-              }
-            ]
-          },
-          "unit": "celsius"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 12,
-        "x": 12,
-        "y": 31
-      },
-      "id": 61,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "hideZeros": false,
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "pluginVersion": "12.3.0",
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "${DS_PROMETHEUS}"
-          },
-          "editorMode": "code",
-          "expr": "max by (instance, gpu_index) (DCGM_FI_DEV_GPU_TEMP{instance=~\"$instance.*\"})",
-          "legendFormat": "{{instance}} - GPU {{gpu_index}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "🌡️ 显卡实时温度 (Temperature)",
-      "type": "timeseries"
     }
   ],
   "preload": false,
@@ -1477,7 +1364,9 @@
       },
       {
         "current": {
-          "text": "All",
+          "text": [
+            "All"
+          ],
           "value": [
             "$__all"
           ]
@@ -1487,17 +1376,16 @@
           "uid": "${DS_PROMETHEUS}"
         },
         "definition": "query_result(max by (user) (present_over_time(gpu_process_memory_usage_bytes{user!=\"\", user!=\"root\", user!=\"ollama\"}[30d])))",
-        "query": "query_result(max by (user) (present_over_time(gpu_process_memory_usage_bytes{user!=\"\", user!=\"root\", user!=\"ollama\"}[30d])))",
         "includeAll": true,
         "label": "用户",
         "multi": true,
         "name": "user",
         "options": [],
+        "query": "query_result(max by (user) (present_over_time(gpu_process_memory_usage_bytes{user!=\"\", user!=\"root\", user!=\"ollama\"}[30d])))",
         "refresh": 1,
-        "regex": "",
+        "regex": "/user=\"([^\"]+)\"/",
         "sort": 1,
-        "type": "query",
-        "hide": 0
+        "type": "query"
       }
     ]
   },
@@ -1509,6 +1397,6 @@
   "timezone": "Asia/Shanghai",
   "title": "用户级GPU使用情况",
   "uid": "gpu-user-stats",
-  "version": 68,
+  "version": 71,
   "weekStart": "monday"
 }
