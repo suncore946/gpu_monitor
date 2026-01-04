@@ -49,6 +49,7 @@ refresh_user_map
 refresh_gpu_info
 COUNTER=0
 
+echo "Starting GPU user metrics collection..."
 while true; do
     ((COUNTER++))
     if [ "$COUNTER" -gt 60 ]; then
@@ -119,3 +120,5 @@ while true; do
     mv -f "$TEMP_FILE" "$METRIC_FILE"
     sleep 5
 done
+
+echo "GPU user metrics collection terminated."
