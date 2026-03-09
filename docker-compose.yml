@@ -5,7 +5,9 @@ services:
     container_name: node_exporter_gpu
     volumes:
       - gpu-metrics-data:/var/lib/node_exporter/textfile_collector
+      - /:/host:ro,rslave  # 增加宿主机根目录挂载
     command:
+      - '--path.rootfs=/host'  # 告诉 exporter 真正的根目录在哪
       - '--collector.textfile.directory=/var/lib/node_exporter/textfile_collector'
       - '--no-collector.rapl' # 关闭一些不需要的收集器减少噪音
     ports:
@@ -15,7 +17,7 @@ services:
 
   # 2. 数据采集 Sidecar: 运行你的 bash 脚本
   gpu-metrics-sidecar:
-    image: nvidia/cuda:12.0.0-base-ubuntu20.04
+    image: nvidia/cuda:13.0.0-base-ubuntu22.04
     container_name: gpu_metrics_sidecar
     privileged: true  # 确保能无阻碍读取 /proc 下所有 PID 信息
     deploy:
