@@ -3,9 +3,7 @@
 METRIC_FILE="/output/gpu_user_metrics.prom"
 TEMP_FILE="${METRIC_FILE}.tmp"
 HOST_PASSWD="/host/etc/passwd"
-
-# 使用空格分隔用户名
-EXCLUDED_USERS="ollama root gdm systemd"
+EXCLUDED_USERS="gdm systemd"
 
 mkdir -p $(dirname "$METRIC_FILE")
 
@@ -84,27 +82,52 @@ while true; do
 
                 if [[ -z "$pid" || -z "$uuid" ]]; then continue; fi
                 
-                user="unknown"
-                cmd="unknown"
+                # 默认值设定，用于捕获异常状态
+                user="unreadable_pid"   # 默认无法读取 PID (大概率是命名空间隔离或瞬间死亡)
+                cmd="hidden_or_dead"    # 默认命令未知
+
+                # 检查进程目录是否存在
                 if [ -d "/proc/$pid" ]; then
+                    # 尝试获取 UID
                     uid=$(awk '/^Uid:/{print $2}' "/proc/$pid/status" 2>/dev/null)
-                    if [ -n "$uid" ] && [ -n "${UID_TO_USER[$uid]}" ]; then
-                        user="${UID_TO_USER[$uid]}"
+                    
+                    if [ -n "$uid" ]; then
+                        if [ -n "${UID_TO_USER[$uid]}" ]; then
+                            user="${UID_TO_USER[$uid]}"
+                        else
+                            # 捕获到了 UID，但在 passwd 中没有名字 (常见于容器内的自定义用户或异常用户)
+                            user="uid_$uid"
+                        fi
                     else
-                        user="uid_$uid"
-                    fi
-                    # 如果当前 user 存在于 EXCLUDED_USERS 列表中，则跳过本次循环
-                    # 这里使用了 bash 字符串匹配技巧：给两边加上空格来确保完全匹配
-                    if [[ " ${EXCLUDED_USERS} " == *" ${user} "* ]]; then
-                        continue
+                        # 目录存在，但没权限读状态 (极度可疑，可能是权限比当前脚本更高的隐藏进程)
+                        user="no_permission"
                     fi
 
-                    if [ -f "/proc/$pid/comm" ]; then
+                    # 获取完整的启动命令行 (用于抓捕挖矿病毒的启动参数)
+                    if [ -f "/proc/$pid/cmdline" ]; then
+                        # cmdline 是用 \0 分隔的，将其替换为空格，并剔除不可见字符
+                        cmd=$(tr '\0' ' ' < "/proc/$pid/cmdline" | tr -cd '[:print:]')
+                    fi
+                    
+                    # 如果 cmdline 为空 (比如内核线程或僵尸进程)，退避使用 comm (短进程名)
+                    if [[ -z "$cmd" ]] && [ -f "/proc/$pid/comm" ]; then
                         cmd=$(tr -d '\n\r' < "/proc/$pid/comm" | tr -cd '[:print:]')
-                        cmd=${cmd:0:20}
+                    fi
+                    
+                    # 如果还是为空
+                    if [[ -z "$cmd" ]]; then
+                         cmd="unknown_command"
                     fi
                 fi
 
+                # 白名单过滤
+                if [[ " ${EXCLUDED_USERS} " == *" ${user} "* ]]; then
+                    continue
+                fi
+
+                # 【格式修正】安全地剔除单双引号和反斜杠，防止破坏 Prometheus Text 格式
+                cmd=$(echo "${cmd:0:50}" | tr -d '\"' | tr -d '\'' | tr -d '\\')
+                
                 used_mem_bytes=$(( used_mem_mb * 1024 * 1024 ))
                 idx="${GPU_IDX_MAP[$uuid]}"
                 name="${GPU_NAME_MAP[$uuid]}"

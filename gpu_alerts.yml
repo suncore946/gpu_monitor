@@ -1,0 +1,45 @@
+groups:
+  - name: GPU_Security_And_Anomaly_Alerts
+    rules:
+      # 【最高危】权限拒绝告警：大概率是 Rootkit 或提权病毒正在隐藏自身
+      - alert: GPUPermissionDeniedProcess
+        expr: gpu_process_memory_usage_bytes{user="no_permission"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "发现无权限读取的异常 GPU 进程"
+          description: "GPU {{ $labels.gpu_index }} 出现无法读取状态的进程 PID {{ $labels.pid }}。说明该进程权限极高或使用了隐藏技术，存在严重安全风险。"
+
+      # 【高危】已知挖矿程序特征匹配
+      - alert: GPUMiningProcessDetected
+        # 正则匹配常见的挖矿软件名称，可根据实际情况追加
+        expr: gpu_process_memory_usage_bytes{process_name=~".*(xmrig|nbminer|ethminer|cgminer|nanominer|bminer|t-rex).*"} > 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "检测到疑似挖矿病毒占用 GPU"
+          description: "用户 {{ $labels.user }} (PID: {{ $labels.pid }}) 正在运行疑似挖矿进程: {{ $labels.process_name }}。"
+
+      # 【中危】无法追踪的幽灵进程告警
+      - alert: GPUUnreadablePID
+        expr: gpu_process_memory_usage_bytes{user="unreadable_pid"} > 0
+        # 持续 3 分钟以上才告警，过滤掉那些正常闪退的“短命进程”
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "发现长期存在的 GPU 幽灵进程"
+          description: "PID {{ $labels.pid }} 正在占用 GPU {{ $labels.gpu_index }} 显存，但在 /proc 中无法找到。如果是容器环境，请检查监控脚本是否开启了 --pid=host；否则可能是僵尸进程未释放显存。"
+
+      # 【低危/审计】未注册用户的大量显存占用
+      - alert: GPUHighUsageByUnknownUser
+        # 如果一个宿主机未注册的 UID (如容器内自定义用户) 占用了超过 5GB 显存，触发审查
+        expr: gpu_process_memory_usage_bytes{user=~"uid_.*"} > 5000000000
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "未知 UID 用户大量占用 GPU 显存"
+          description: "宿主机 /etc/passwd 中未注册的用户 {{ $labels.user }} (命令: {{ $labels.process_name }}) 占用了超过 5GB 显存。请确认是否为合法的跑图或模型训练任务。"
