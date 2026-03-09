@@ -26,6 +26,7 @@ cd gpu_monitor
 ## 启动服务
 `
 docker compose up -d
+docker compose up -d --force-recreate # 强制重新创建
 `
 
 ## 导入 Grafana 仪表盘
@@ -61,3 +62,28 @@ docker compose up -d
 
 ## 在 Prometheus 配置中添加新服务器的 scrape job
 - Grafana 仪表盘自动支持多实例筛选
+
+# FAQ
+## 1. 配置代理
+创建配置目录：
+```Bash
+sudo mkdir -p /etc/systemd/system/docker.service.d
+```
+创建或编辑代理配置文件：
+```Bash
+sudo nano /etc/systemd/system/docker.service.d/http-proxy.conf
+```
+
+写入代理配置（请将 127.0.0.1:7890 替换为你实际的代理地址和端口）：
+```Bash
+[Service]
+Environment="HTTP_PROXY=http://127.0.0.1:7890"
+Environment="HTTPS_PROXY=http://127.0.0.1:7890"
+Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
+```
+
+重载配置并重启 Docker：
+```Bash
+sudo systemctl daemon-reload
+sudo systemctl restart docker
+```
