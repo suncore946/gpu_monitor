@@ -125,8 +125,8 @@ while true; do
                     continue
                 fi
 
-                # 【格式修正】安全地剔除单双引号和反斜杠，防止破坏 Prometheus Text 格式
-                cmd=$(echo "${cmd:0:50}" | tr -d '\"' | tr -d '\'' | tr -d '\\')
+                # 安全地剔除单双引号和反斜杠，防止破坏 Prometheus Text 格式
+                cmd=$(echo "${cmd:0:50}" | tr -d '"' | tr -d "'" | tr -d '\\')
                 
                 used_mem_bytes=$(( used_mem_mb * 1024 * 1024 ))
                 idx="${GPU_IDX_MAP[$uuid]}"
