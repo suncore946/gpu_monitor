@@ -36,10 +36,10 @@ groups:
       # 【低危/审计】未注册用户的大量显存占用
       - alert: GPUHighUsageByUnknownUser
         # 如果一个宿主机未注册的 UID (如容器内自定义用户) 占用了超过 5GB 显存，触发审查
-        expr: gpu_process_memory_usage_bytes{user=~"uid_.*"} > 5000000000
+        expr: gpu_process_memory_usage_bytes{user_state="uid_only"} > 5000000000
         for: 10m
         labels:
           severity: warning
         annotations:
           summary: "未知 UID 用户大量占用 GPU 显存"
-          description: "宿主机 /etc/passwd 中未注册的用户 {{ $labels.user }} (命令: {{ $labels.process_name }}) 占用了超过 5GB 显存。请确认是否为合法的跑图或模型训练任务。"
+          description: "宿主机 NSS 未解析到 UID {{ $labels.raw_uid }}，当前被归类为 {{ $labels.user }}；对应进程 {{ $labels.process_name }} 占用了超过 5GB 显存。请确认是否为合法的跑图或模型训练任务。"
